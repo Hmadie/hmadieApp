@@ -2750,9 +2750,14 @@ async function drawInsert() {
 })();
 </script>
 <script>
-/* SUPPORT FORM — messages are emailed to the owner through FormSubmit (free, no account) */
-const SUPPORT_EMAIL = 'hmadiehmadie101@gmail.com';   // you can later replace this with your FormSubmit alias to hide your email
-const SUPPORT_ENDPOINT = 'https://formsubmit.co/ajax/' + SUPPORT_EMAIL;
+/* SUPPORT FORM — messages are emailed to the owner through Web3Forms (free, no activation step) */
+const WEB3FORMS_KEY = '865b6b4d-6330-4cde-8f80-d468cd0460e6';   // get it free at https://web3forms.com (sent to your email)
+const SUPPORT_EMAIL = 'hmadiehmadie101@gmail.com';   // only used by the "Copy message" button
+const SUPPORT_ENDPOINT = 'https://api.web3forms.com/submit';
+function keyMissing() {
+    if (WEB3FORMS_KEY === 'PASTE_YOUR_ACCESS_KEY_HERE') { spFail('❌ Support is not configured yet (missing access key). Use “Copy message” for now.'); return true; }
+    return false;
+}
 function openSupport() { document.getElementById('support-modal').style.display = 'flex'; }
 function closeSupport() { document.getElementById('support-modal').style.display = 'none'; }
 function spVal(id) { return document.getElementById(id).value.trim(); }
@@ -2768,15 +2773,15 @@ function spFail(text) {
     document.getElementById('sp-alt').style.display = '';
 }
 async function sendSupport() {
-    if (!supportOk()) return;
+    if (!supportOk() || keyMissing()) return;
     const btn = document.getElementById('sp-send');
     btn.disabled = true; btn.textContent = '⏳ Sending...';
     try {
         const r = await fetch(SUPPORT_ENDPOINT, {
             method: 'POST',
             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: spVal('sp-name'), email: spVal('sp-email'), message: spVal('sp-issue'),
-                                   browser: navigator.userAgent, _subject: 'Hmadie support: ' + spVal('sp-name'), _template: 'table' })
+            body: JSON.stringify({ access_key: WEB3FORMS_KEY, name: spVal('sp-name'), email: spVal('sp-email'), message: spVal('sp-issue'),
+                                   browser: navigator.userAgent, subject: 'Hmadie support: ' + spVal('sp-name') })
         });
         let j = {}; try { j = await r.json(); } catch (e) {}
         if (r.ok && (j.success === true || j.success === 'true')) {
@@ -2791,11 +2796,11 @@ async function sendSupport() {
     btn.disabled = false; btn.textContent = '📨 Send';
 }
 function sendSupportPlain() {
-    if (!supportOk()) return;
+    if (!supportOk() || keyMissing()) return;
     const f = document.createElement('form');
-    f.method = 'POST'; f.action = 'https://formsubmit.co/' + SUPPORT_EMAIL; f.target = '_blank';
-    [['name', spVal('sp-name')], ['email', spVal('sp-email')], ['message', spVal('sp-issue')], ['browser', navigator.userAgent],
-     ['_subject', 'Hmadie support: ' + spVal('sp-name')], ['_template', 'table']].forEach(([k, v]) => {
+    f.method = 'POST'; f.action = SUPPORT_ENDPOINT; f.target = '_blank';
+    [['access_key', WEB3FORMS_KEY], ['name', spVal('sp-name')], ['email', spVal('sp-email')], ['message', spVal('sp-issue')], ['browser', navigator.userAgent],
+     ['subject', 'Hmadie support: ' + spVal('sp-name')]].forEach(([k, v]) => {
         const i = document.createElement('input'); i.type = 'hidden'; i.name = k; i.value = v; f.appendChild(i);
     });
     document.body.appendChild(f); f.submit(); f.remove();
